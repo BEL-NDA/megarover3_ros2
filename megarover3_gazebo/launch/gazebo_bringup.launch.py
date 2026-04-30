@@ -15,9 +15,66 @@ from launch.actions import (
 from launch.event_handlers import OnShutdown
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def _check_no_running_gazebo(context, *args, **kwargs):
+    cleanup_stale = LaunchConfiguration("cleanup_stale_gazebo").perform(context)
+    cleanup_stale = cleanup_stale.lower() in ("1", "true", "yes", "on")
+
+    if cleanup_stale:
+        stale_patterns = [
+            "megarover3_robot_state_publisher",
+            "rover_twist_relay.py",
+            "gazebo_odom_bridge",
+            "async_slam_toolbox_node",
+            "rviz2 .*megarover3_navigation",
+            "spawn_entity.py .*spawn_wall_",
+            "controller_manager spawner",
+        ]
+        for pattern in stale_patterns:
+            subprocess.run(
+                ["pkill", "-TERM", "-f", pattern],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        subprocess.run(
+            ["pkill", "-TERM", "-f", "gzserver .*/tmp/megarover3_world_.*\\.world"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(
+            ["pkill", "-TERM", "-f", "gzclient"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(["sleep", "1"], stdout=subprocess.DEVNULL)
+        for pattern in stale_patterns:
+            subprocess.run(
+                ["pkill", "-KILL", "-f", pattern],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        subprocess.run(
+            ["pkill", "-KILL", "-f", "gzserver .*/tmp/megarover3_world_.*\\.world"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        for _ in range(10):
+            has_stale_gzserver = subprocess.run(
+                ["pgrep", "-f", "gzserver .*/tmp/megarover3_world_.*\\.world"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode == 0
+            port_in_use = subprocess.run(
+                ["bash", "-lc", "ss -lnt | grep -q ':11345'"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode == 0
+            if not has_stale_gzserver and not port_in_use:
+                break
+            subprocess.run(["sleep", "0.5"], stdout=subprocess.DEVNULL)
+
     has_gzserver = subprocess.run(
         ["pgrep", "gzserver"], stdout=subprocess.DEVNULL
     ).returncode == 0
@@ -125,12 +182,13 @@ def _create_urdf_and_rsp(context, *args, **kwargs):
     rsp = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        name="robot_state_publisher",
+        name="megarover3_robot_state_publisher",
         output="screen",
         parameters=[
             {
-                "robot_description": Command(
-                    [FindExecutable(name="xacro"), " ", xacro_file]
+                "robot_description": ParameterValue(
+                    Command([FindExecutable(name="xacro"), " ", xacro_file]),
+                    value_type=str,
                 ),
                 "use_sim_time": True,
             }
@@ -168,6 +226,24 @@ def _resolve_spawn_z(context, *args, **kwargs):
 def _cleanup_temp_files(context, *args, **kwargs):
     world_path = LaunchConfiguration("world_path").perform(context)
     urdf_path = LaunchConfiguration("urdf_path").perform(context)
+
+    if world_path:
+        subprocess.run(
+            ["pkill", "-TERM", "-f", f"gzserver .*{world_path}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(
+            ["pkill", "-TERM", "-f", "gzclient"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(["sleep", "1"], stdout=subprocess.DEVNULL)
+        subprocess.run(
+            ["pkill", "-KILL", "-f", f"gzserver .*{world_path}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     for p in (world_path, urdf_path):
         try:
@@ -231,14 +307,14 @@ def generate_launch_description():
             "echo '[gazebo_bringup] waiting for /controller_manager/list_controllers'; "
             "sleep 1.0; "
             "done; "
-            "if ros2 control list_controllers 2>/dev/null | grep -Eq 'joint_state_broadcaster\\s+active'; then "
+            "if ros2 control list_controllers 2>/dev/null | grep -Eq '^joint_state_broadcaster[[:space:]].*[[:space:]]active'; then "
             "echo '[gazebo_bringup] joint_state_broadcaster already active'; "
             "else "
             "ros2 run controller_manager spawner joint_state_broadcaster "
             "--controller-manager-timeout 120 "
             "--service-call-timeout 120 || exit 1; "
             "fi; "
-            "if ros2 control list_controllers 2>/dev/null | grep -Eq 'wheel_velocity_controller\\s+active'; then "
+            "if ros2 control list_controllers 2>/dev/null | grep -Eq '^wheel_velocity_controller[[:space:]].*[[:space:]]active'; then "
             "echo '[gazebo_bringup] wheel_velocity_controller already active'; "
             "else "
             "ros2 run controller_manager spawner wheel_velocity_controller "
@@ -287,6 +363,7 @@ def generate_launch_description():
         DeclareLaunchArgument("gui", default_value="true"),
         DeclareLaunchArgument("verbose", default_value="false"),
         DeclareLaunchArgument("rover", default_value="mega3"),
+        DeclareLaunchArgument("cleanup_stale_gazebo", default_value="true"),
         DeclareLaunchArgument("physics", default_value="ode"),
         DeclareLaunchArgument("spawn_z", default_value=""),
         DeclareLaunchArgument("max_step_size", default_value="0.002"),
