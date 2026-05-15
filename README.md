@@ -107,12 +107,15 @@
 2. このリポジトリをワークスペースにクローンしてください:
 
    ```bash
+   $ source /opt/ros/humble/setup.bash
    $ mkdir -p ~/ros2_ws/src
    $ cd ~/ros2_ws/src
-   $ git clone -b humble_gazebo https://github.com/vstoneofficial/megarover3_ros2.git --recurse-submodules
-   $ git clone -b humble_gazebo https://github.com/vstoneofficial/vs_rover_options_description.git  # オプションを表示するため
+   $ git clone https://github.com/vstoneofficial/megarover3_ros2.git --recurse-submodules
+   $ git clone https://github.com/vstoneofficial/vs_rover_options_description.git  # オプションを表示するため
+   $ sudo apt update
    $ sudo xargs -a ~/ros2_ws/src/megarover3_ros2/packages.txt apt install -y
-   $ rosdep install -r --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
+   $ rosdep update
+   $ rosdep install -r --from-paths . --ignore-src --rosdistro humble -y
    ```
 
 3. ワークスペースをビルド:
