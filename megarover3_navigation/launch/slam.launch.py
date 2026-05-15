@@ -9,6 +9,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     rviz_config_path = get_package_share_path('megarover3_navigation') / 'rviz/slam.rviz'
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
     rover_arg = DeclareLaunchArgument(
         name='rover',
@@ -22,11 +23,18 @@ def generate_launch_description():
         description='Absolute path to rviz config file'
     )
 
+    use_sim_time_arg = DeclareLaunchArgument(
+        name='use_sim_time',
+        default_value='false',
+        description='Use simulation/Gazebo clock'
+    )
+
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-d', LaunchConfiguration('rvizconfig')],
     )
 
@@ -39,13 +47,14 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments={
-            'use_sim_time': 'false',
+            'use_sim_time': use_sim_time,
         }.items()
     )
 
     return LaunchDescription([
         rover_arg,
         rviz_arg,
+        use_sim_time_arg,
         rviz_node,
         launch_slam,
     ])
