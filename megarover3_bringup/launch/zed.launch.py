@@ -1,11 +1,19 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
+    depth_mode_arg = DeclareLaunchArgument(
+        'depth_mode',
+        default_value='NEURAL',
+        description='ZED depth mode: NEURAL_LIGHT, NEURAL, NEURAL_PLUS',
+        choices=['NEURAL_LIGHT', 'NEURAL', 'NEURAL_PLUS'],
+    )
+
     zed_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -23,7 +31,10 @@ def generate_launch_description():
                 'config',
                 'zed_megarover.yaml',
             ),
+            'param_overrides': PythonExpression([
+                '"depth.depth_mode=', LaunchConfiguration('depth_mode'), '"'
+            ]),
         }.items(),
     )
 
-    return LaunchDescription([zed_launch])
+    return LaunchDescription([depth_mode_arg, zed_launch])
