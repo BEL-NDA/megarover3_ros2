@@ -17,7 +17,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'camera_model': 'zed2i',
-            'publish_urdf': 'false',
+            'publish_urdf': 'true',
             'publish_tf': 'true',
             'ros_params_override_path': os.path.join(
                 get_package_share_directory('megarover3_bringup'),
