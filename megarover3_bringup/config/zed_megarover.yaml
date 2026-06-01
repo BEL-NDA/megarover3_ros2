@@ -1,10 +1,10 @@
-zed_node:
+/**:
   ros__parameters:
     pos_tracking:
       pos_tracking_enabled: true
-      odometry_frame: 'zed_odom'   # wheel odom の 'odom' と分離
+      odometry_frame: 'zed_odom'
       map_frame: 'zed_map'
-      two_d_mode: true              # 地上ロボットなので平面拘束
+      two_d_mode: true
       imu_fusion: true
       publish_tf: true
       publish_map_tf: false
