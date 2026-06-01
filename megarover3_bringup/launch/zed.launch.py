@@ -32,13 +32,4 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Connect odom -> zed_odom with camera height offset so that
-    # the point cloud appears at the correct height in odom frame.
-    odom_to_zed_odom = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='odom_to_zed_odom',
-        arguments=['0', '0', str(ZED_MOUNT_Z), '0', '0', '0', 'odom', 'zed_odom'],
-    )
-
-    return LaunchDescription([zed_launch, odom_to_zed_odom])
+    return LaunchDescription([zed_launch])
