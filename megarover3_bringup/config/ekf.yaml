@@ -9,7 +9,7 @@ ekf_filter_node:
     base_link_frame: base_footprint
     world_frame: odom
 
-    # 車輪エンコーダ: vx と vyaw を使用（位置の積分はEKFが担う）
+    # 車輪エンコーダ: vx と vyaw を使用
     odom0: /odom
     odom0_config: [false, false, false,
                    false, false, false,
@@ -20,9 +20,9 @@ ekf_filter_node:
     odom0_relative: false
     odom0_queue_size: 10
 
-    # ZED 視覚 odom: yaw のみ使用（x/y は車輪 odom と干渉しやすいため除外）
+    # ZED 視覚 odom: x, y, yaw を使用
     odom1: /zed/zed_node/odom
-    odom1_config: [false, false, false,
+    odom1_config: [true,  true,  false,
                    false, false, true,
                    false, false, false,
                    false, false, false,
