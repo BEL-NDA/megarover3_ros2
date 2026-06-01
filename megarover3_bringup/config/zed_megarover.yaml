@@ -9,3 +9,4 @@
       publish_tf: true
       publish_map_tf: false
       set_gravity_as_origin: false
+      floor_alignment: true

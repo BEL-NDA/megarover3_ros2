@@ -5,11 +5,6 @@ from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
-# ZED mount height above wheel axis: 1.13m
-# Wheel axis height from base_link: 0.07m
-# => base_link to zed_camera_link z = 1.20m
-ZED_MOUNT_Z = 1.20
-
 
 def generate_launch_description():
     zed_launch = IncludeLaunchDescription(
@@ -32,4 +27,13 @@ def generate_launch_description():
         }.items(),
     )
 
-    return LaunchDescription([zed_launch])
+    # Connect zed_odom -> odom so the robot model is visible
+    # when Fixed Frame = zed_odom in RViz.
+    zed_odom_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='zed_odom_to_odom',
+        arguments=['0', '0', '0', '0', '0', '0', 'zed_odom', 'odom'],
+    )
+
+    return LaunchDescription([zed_launch, zed_odom_to_odom])
