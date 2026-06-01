@@ -9,7 +9,7 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 def generate_launch_description():
     depth_mode_arg = DeclareLaunchArgument(
         'depth_mode',
-        default_value='NEURAL',
+        default_value='NEURAL_PLUS',
         description='ZED depth mode: NEURAL_LIGHT, NEURAL, NEURAL_PLUS',
         choices=['NEURAL_LIGHT', 'NEURAL', 'NEURAL_PLUS'],
     )
