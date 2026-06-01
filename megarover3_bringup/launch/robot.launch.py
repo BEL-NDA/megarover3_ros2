@@ -13,7 +13,7 @@ CONFIGURABLE_PARAMETERS = [
         'name': 'rover',
         'default': 'mega3',
         'description': 'model of rover',
-        'choices': "'mega3', 'f120a', 's40a_lb'",
+        'choices': "'mega3', 'f120a', 's40a_lb', 'mega_zed'",
     },
 ]
 
