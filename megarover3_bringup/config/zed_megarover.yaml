@@ -8,4 +8,4 @@ zed_node:
       imu_fusion: true
       publish_tf: true
       publish_map_tf: false
-      set_gravity_as_origin: true
+      set_gravity_as_origin: false
