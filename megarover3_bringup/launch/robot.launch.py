@@ -78,8 +78,23 @@ def launch_setup(context, params, param_name_suffix=''):
             package='megarover3_bringup',
             executable='pub_odom',
             name='pub_odom',
+            parameters=[{'publish_tf': rover_type != 'mega_zed'}],
         ),
-    ]
+    ] + ([
+        Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[
+                os.path.join(
+                    get_package_share_directory('megarover3_bringup'),
+                    'config',
+                    'ekf.yaml',
+                )
+            ],
+        ),
+    ] if rover_type == 'mega_zed' else [])
 
 
 def generate_launch_description():

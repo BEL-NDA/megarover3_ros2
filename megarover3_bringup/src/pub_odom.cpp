@@ -26,6 +26,9 @@ public:
   PubOdomNode()
   : Node("odometry_publisher")
   {
+    this->declare_parameter("publish_tf", true);
+    publish_tf_ = this->get_parameter("publish_tf").as_bool();
+
     publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", rclcpp::QoS(1));
 
     // publish odometry data and tf transform every 10ms (=100hz)
@@ -63,9 +66,10 @@ private:
     msg.twist.twist.linear.x = vx;
     msg.twist.twist.angular.z = vth;
 
-    // publish odometry and tf transform
     publisher_->publish(msg);
-    tf_broadcaster_->sendTransform(t);
+    if (publish_tf_) {
+      tf_broadcaster_->sendTransform(t);
+    }
   }
 
   void rover_odom_callback(const std::shared_ptr<geometry_msgs::msg::Twist> msg)
@@ -103,6 +107,7 @@ private:
     last_time = current_time;
   }
 
+  bool publish_tf_;
   double vx =  0.0;
   double vth = 0.0;
   double odom_kvx = 1.0;

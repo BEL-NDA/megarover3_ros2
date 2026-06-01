@@ -2,11 +2,10 @@
   ros__parameters:
     pos_tracking:
       pos_tracking_enabled: true
-      odometry_frame: 'zed_odom'
-      map_frame: 'zed_map'
+      odometry_frame: 'odom'
+      map_frame: 'map'
       two_d_mode: true
       imu_fusion: true
-      publish_tf: true
+      publish_tf: false
       publish_map_tf: false
       set_gravity_as_origin: false
-      floor_alignment: true
