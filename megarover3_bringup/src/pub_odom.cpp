@@ -65,6 +65,8 @@ private:
     msg.child_frame_id = "base_footprint";
     msg.twist.twist.linear.x = vx;
     msg.twist.twist.angular.z = vth;
+    msg.twist.covariance[0]  = 0.01;   // vx
+    msg.twist.covariance[35] = 0.03;   // vyaw
 
     publisher_->publish(msg);
     if (publish_tf_) {
