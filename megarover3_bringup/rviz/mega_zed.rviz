@@ -246,6 +246,7 @@ Visualization Manager:
       Value: false
       Visibility:
         Camera: true
+        EStop: false
         Grid: true
         ObjectDetection: true
         Path: true
@@ -292,6 +293,7 @@ Visualization Manager:
       Visibility:
         "": true
         Camera: true
+        EStop: false
         Grid: true
         ObjectDetection: true
         Path: true
@@ -318,6 +320,7 @@ Visualization Manager:
       Visibility:
         "": true
         Camera: true
+        EStop: false
         Grid: true
         ObjectDetection: true
         Path: true
@@ -343,6 +346,7 @@ Visualization Manager:
       Value: true
       Visibility:
         Camera: true
+        EStop: false
         Grid: true
         ObjectDetection: true
         Path: true
