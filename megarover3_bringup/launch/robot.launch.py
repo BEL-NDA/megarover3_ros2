@@ -15,6 +15,12 @@ CONFIGURABLE_PARAMETERS = [
         'description': 'model of rover',
         'choices': "'mega3', 'f120a', 's40a_lb', 'mega_zed'",
     },
+    {
+        'name': 'od',
+        'default': 'false',
+        'description': 'enable object detection marker visualization (true/false)',
+        'choices': "'true', 'false'",
+    },
 ]
 
 
@@ -36,6 +42,7 @@ def set_configurable_parameters(parameters):
 
 def launch_setup(context, params, param_name_suffix=''):
     rover_type = LaunchConfiguration('rover').perform(context)
+    od = LaunchConfiguration('od').perform(context)
 
     robot_description_path = os.path.join(
         get_package_share_directory('megarover_description'),
@@ -99,7 +106,13 @@ def launch_setup(context, params, param_name_suffix=''):
             executable='odom_to_path.py',
             name='odom_to_path',
         ),
-    ] if rover_type == 'mega_zed' else [])
+    ] if rover_type == 'mega_zed' else []) + ([
+        Node(
+            package='megarover3_bringup',
+            executable='obj_det_markers.py',
+            name='obj_det_markers',
+        ),
+    ] if od == 'true' else [])
 
 
 def generate_launch_description():
