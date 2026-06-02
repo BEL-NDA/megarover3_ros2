@@ -11,8 +11,12 @@ def launch_setup(context, *args, **kwargs):
     depth_mode = LaunchConfiguration('depth_mode').perform(context)
     slam_mode = LaunchConfiguration('slam_mode').perform(context)
     area_file = LaunchConfiguration('area_file').perform(context)
+    od = LaunchConfiguration('od').perform(context)
 
     overrides = [f'depth.depth_mode:={depth_mode}']
+
+    if od == 'true':
+        overrides.append('object_detection.od_enabled:=true')
 
     if slam_mode == 'mapping':
         overrides += [
@@ -75,6 +79,12 @@ def generate_launch_description():
             'area_file',
             default_value='',
             description='Path to .area file. Required for localization mode. In mapping mode, saves to this path on shutdown.',
+        ),
+        DeclareLaunchArgument(
+            'od',
+            default_value='false',
+            description='Enable object detection (true/false). First run optimizes AI model for your GPU (~minutes).',
+            choices=['true', 'false'],
         ),
         OpaqueFunction(function=launch_setup),
     ])
