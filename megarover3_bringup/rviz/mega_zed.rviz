@@ -234,7 +234,7 @@ Visualization Manager:
         Value: /estop_marker
       Value: true
     - Class: rviz_default_plugins/Camera
-      Enabled: false
+      Enabled: true
       Far Plane Distance: 100
       Image Rendering: background and overlay
       Name: Camera
@@ -245,7 +245,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Best Effort
         Value: /zed/zed_node/rgb/image_rect_color
-      Value: false
+      Value: true
       Visibility:
         Camera: false
         EStop: false
@@ -255,7 +255,7 @@ Visualization Manager:
         Pose: false
         RobotModel: false
         TF: false
-        Value: false
+        Value: true
         ZED PointCloud: false
         ZED RGB: false
       Zoom Factor: 1
@@ -301,7 +301,7 @@ Visualization Manager:
         Pose: false
         RobotModel: false
         TF: false
-        Value: false
+        Value: true
         ZED PointCloud: false
         ZED RGB: false
       Zoom Factor: 1
