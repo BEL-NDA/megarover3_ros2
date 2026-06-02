@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""Accumulate ZED point cloud during mapping and save as PCD on shutdown."""
+"""Accumulate ZED XYZRGB point cloud during mapping and save as PCD on shutdown."""
 import os
-import struct
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -15,7 +14,7 @@ class SaveMapPcd(Node):
     def __init__(self):
         super().__init__('save_map_pcd')
         self.declare_parameter('output_path', '')
-        self.declare_parameter('voxel_size', 0.05)  # m
+        self.declare_parameter('voxel_size', 0.05)
 
         self.output_path = self.get_parameter('output_path').get_parameter_value().string_value
         self.voxel_size = self.get_parameter('voxel_size').get_parameter_value().double_value
@@ -24,6 +23,7 @@ class SaveMapPcd(Node):
             raise RuntimeError('output_path parameter is required')
 
         self.points = None  # Nx3 float32
+        self.colors = None  # Nx3 uint8 (r,g,b)
 
         qos = QoSProfile(
             depth=5,
@@ -33,27 +33,47 @@ class SaveMapPcd(Node):
         self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered',
                                  self._callback, qos)
         self.create_service(Empty, '~/save', self._save_srv)
-        self.get_logger().info(f'Accumulating point cloud → {self.output_path}')
+        self.get_logger().info(f'Accumulating XYZRGB point cloud → {self.output_path}')
 
     def _callback(self, msg: PointCloud2):
-        pts = np.array(list(pc2.read_points(msg, field_names=('x', 'y', 'z'), skip_nans=True)),
-                       dtype=np.float32)
-        if pts.size == 0:
+        # ZED publishes XYZRGBA: rgb packed as float32
+        field_names = [f.name for f in msg.fields]
+        has_rgb = 'rgb' in field_names or 'rgba' in field_names
+        rgb_field = 'rgb' if 'rgb' in field_names else ('rgba' if 'rgba' in field_names else None)
+
+        read_fields = ('x', 'y', 'z') + ((rgb_field,) if rgb_field else ())
+        gen = pc2.read_points(msg, field_names=read_fields, skip_nans=True)
+        structured = np.array(list(gen))
+        if structured.size == 0:
             return
-        pts = pts.reshape(-1, 3)
+
+        pts = np.column_stack([structured['x'], structured['y'], structured['z']]).astype(np.float32)
+
+        if rgb_field:
+            packed = structured[rgb_field].view(np.uint32)
+            r = ((packed >> 16) & 0xFF).astype(np.uint8)
+            g = ((packed >> 8)  & 0xFF).astype(np.uint8)
+            b = (packed         & 0xFF).astype(np.uint8)
+            rgb = np.column_stack([r, g, b])
+        else:
+            rgb = np.full((len(pts), 3), 200, dtype=np.uint8)
+
         if self.points is None:
             self.points = pts
+            self.colors = rgb
         else:
             self.points = np.vstack([self.points, pts])
-        # voxel downsample every 500k points to keep memory manageable
+            self.colors = np.vstack([self.colors, rgb])
+
         if len(self.points) > 500_000:
-            self.points = self._voxel_downsample(self.points)
+            self.points, self.colors = self._voxel_downsample(self.points, self.colors)
+
         self.get_logger().info(f'Points: {len(self.points)}', throttle_duration_sec=5.0)
 
-    def _voxel_downsample(self, pts: np.ndarray) -> np.ndarray:
+    def _voxel_downsample(self, pts, colors):
         voxel = (pts / self.voxel_size).astype(np.int32)
         _, idx = np.unique(voxel, axis=0, return_index=True)
-        return pts[idx]
+        return pts[idx], colors[idx]
 
     def _save_srv(self, _req, res):
         self._write_pcd()
@@ -63,23 +83,32 @@ class SaveMapPcd(Node):
         if self.points is None or len(self.points) == 0:
             self.get_logger().warn('No points to save.')
             return
-        pts = self._voxel_downsample(self.points)
-        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+        pts, colors = self._voxel_downsample(self.points, self.colors)
         n = len(pts)
+        os.makedirs(os.path.dirname(os.path.abspath(self.output_path)), exist_ok=True)
+
+        # pack RGB into uint32 for PCD
+        rgb_packed = (colors[:, 0].astype(np.uint32) << 16 |
+                      colors[:, 1].astype(np.uint32) << 8  |
+                      colors[:, 2].astype(np.uint32))
+
         with open(self.output_path, 'w') as f:
             f.write('# .PCD v0.7\n')
             f.write('VERSION 0.7\n')
-            f.write('FIELDS x y z\n')
-            f.write('SIZE 4 4 4\n')
-            f.write('TYPE F F F\n')
-            f.write('COUNT 1 1 1\n')
+            f.write('FIELDS x y z rgb\n')
+            f.write('SIZE 4 4 4 4\n')
+            f.write('TYPE F F F U\n')
+            f.write('COUNT 1 1 1 1\n')
             f.write(f'WIDTH {n}\n')
             f.write('HEIGHT 1\n')
             f.write('VIEWPOINT 0 0 0 1 0 0 0\n')
             f.write(f'POINTS {n}\n')
             f.write('DATA ascii\n')
-            np.savetxt(f, pts, fmt='%.4f')
-        self.get_logger().info(f'Saved {n} points to {self.output_path}')
+            data = np.column_stack([pts, rgb_packed])
+            for row in data:
+                f.write(f'{row[0]:.4f} {row[1]:.4f} {row[2]:.4f} {int(row[3])}\n')
+
+        self.get_logger().info(f'Saved {n} XYZRGB points to {self.output_path}')
 
     def destroy_node(self):
         self._write_pcd()
