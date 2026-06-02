@@ -106,6 +106,11 @@ def launch_setup(context, params, param_name_suffix=''):
             executable='odom_to_path.py',
             name='odom_to_path',
         ),
+        Node(
+            package='megarover3_bringup',
+            executable='zed_odom_filter.py',
+            name='zed_odom_filter',
+        ),
     ] if rover_type == 'mega_zed' else []) + ([
         Node(
             package='megarover3_bringup',

@@ -75,6 +75,7 @@ install(
   PROGRAMS
     scripts/odom_to_path.py
     scripts/obj_det_markers.py
+    scripts/zed_odom_filter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

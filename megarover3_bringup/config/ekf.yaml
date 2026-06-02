@@ -20,8 +20,8 @@ ekf_filter_node:
     odom0_relative: false
     odom0_queue_size: 10
 
-    # ZED 視覚 odom: x, y, yaw を使用
-    odom1: /zed/zed_node/odom
+    # ZED 視覚 odom: x, y, yaw を使用（zed_odom_filter 経由でジャンプ除去済み）
+    odom1: /zed/odom/filtered
     odom1_config: [true,  true,  false,
                    false, false, true,
                    false, false, false,
