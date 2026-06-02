@@ -77,6 +77,8 @@ install(
     scripts/obj_det_markers.py
     scripts/zed_odom_filter.py
     scripts/estop_marker.py
+    scripts/save_map_pcd.py
+    scripts/publish_map_pcd.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

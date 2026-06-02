@@ -5,6 +5,7 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def launch_setup(context, *args, **kwargs):
@@ -58,7 +59,37 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    return [zed_launch]
+    nodes = [zed_launch]
+
+    # mapping モード: 点群を PCD に保存
+    if slam_mode == 'mapping':
+        pcd_path = area_file.replace('.area', '.pcd') if area_file else \
+            os.path.expanduser('~/megarover_ws/maps/map.pcd')
+        nodes.append(Node(
+            package='megarover3_bringup',
+            executable='save_map_pcd.py',
+            name='save_map_pcd',
+            parameters=[{
+                'output_path': pcd_path,
+                'voxel_size': 0.05,
+            }],
+        ))
+
+    # localization モード: 保存済み PCD を配信
+    elif slam_mode == 'localization':
+        pcd_path = area_file.replace('.area', '.pcd')
+        if os.path.exists(pcd_path):
+            nodes.append(Node(
+                package='megarover3_bringup',
+                executable='publish_map_pcd.py',
+                name='publish_map_pcd',
+                parameters=[{
+                    'pcd_path': pcd_path,
+                    'frame_id': 'map',
+                }],
+            ))
+
+    return nodes
 
 
 def generate_launch_description():
