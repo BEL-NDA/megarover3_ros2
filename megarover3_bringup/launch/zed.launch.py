@@ -59,44 +59,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    nodes = [zed_launch]
-
-    # mapping モード: 点群を PCD に保存
-    if slam_mode == 'mapping':
-        pcd_path = area_file.replace('.area', '.pcd') if area_file else \
-            os.path.expanduser('~/megarover_ws/maps/map.pcd')
-        nodes.append(Node(
-            package='megarover3_bringup',
-            executable='save_map_pcd.py',
-            name='save_map_pcd',
-            parameters=[{
-                'output_path': pcd_path,
-                'voxel_size': 0.05,
-            }],
-        ))
-
-    # localization モード: 保存済み PCD を配信 + map フレームを定義
-    elif slam_mode == 'localization':
-        # map フレームが TF に存在しないと RViz で選べないため static transform を追加
-        nodes.append(Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='map_to_odom_static',
-            arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
-        ))
-        pcd_path = area_file.replace('.area', '.pcd')
-        if os.path.exists(pcd_path):
-            nodes.append(Node(
-                package='megarover3_bringup',
-                executable='publish_map_pcd.py',
-                name='publish_map_pcd',
-                parameters=[{
-                    'pcd_path': pcd_path,
-                    'frame_id': 'map',
-                }],
-            ))
-
-    return nodes
+    return [zed_launch]
 
 
 def generate_launch_description():

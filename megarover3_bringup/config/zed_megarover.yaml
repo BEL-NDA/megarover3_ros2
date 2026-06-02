@@ -8,7 +8,7 @@
       imu_fusion: true
       publish_tf: false
       publish_map_tf: false
-      set_gravity_as_origin: false
+      set_gravity_as_origin: true
       reset_odom_with_loop_closure: false
       publish_3d_landmarks: true  # publish SLAM landmarks as PointCloud2 on pose/landmarks
       publish_lm_skip_frame: 5
