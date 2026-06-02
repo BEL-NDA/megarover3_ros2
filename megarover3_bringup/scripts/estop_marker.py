@@ -2,6 +2,7 @@
 """Publish a colored sphere marker indicating e-stop state."""
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker
 from std_msgs.msg import ColorRGBA
@@ -11,8 +12,14 @@ from geometry_msgs.msg import Point
 class EstopMarker(Node):
     def __init__(self):
         super().__init__('estop_marker')
+        # micro-ROS publishes best_effort → match QoS
+        best_effort_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+        )
         self.pub = self.create_publisher(Marker, '/estop_marker', 10)
-        self.create_subscription(Bool, '/rover_estop', self._callback, 10)
+        self.create_subscription(Bool, '/rover_estop', self._callback, best_effort_qos)
         # publish initial state
         self.create_timer(0.5, self._publish_current)
         self._estop = False
