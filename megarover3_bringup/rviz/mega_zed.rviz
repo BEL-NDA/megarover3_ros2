@@ -155,8 +155,8 @@ Visualization Manager:
       Name: ZED PointCloud
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 1
-      Size (m): 0.009999999776482582
+      Size (Pixels): 2
+      Size (m): 0.019999999552965164
       Style: Points
       Topic:
         Depth: 5
