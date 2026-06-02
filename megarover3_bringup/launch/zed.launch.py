@@ -24,6 +24,7 @@ def launch_setup(context, *args, **kwargs):
             'pos_tracking.area_memory:=true',
             'pos_tracking.enable_localization_only:=false',
             'pos_tracking.save_area_memory_on_closing:=true',
+            'pos_tracking.publish_map_tf:=true',  # map フレームを TF に追加
         ]
         if area_file:
             overrides.append(f'pos_tracking.area_file_path:={area_file}')
@@ -35,6 +36,7 @@ def launch_setup(context, *args, **kwargs):
             f'pos_tracking.area_file_path:={area_file}',
             'pos_tracking.enable_localization_only:=true',
             'pos_tracking.save_area_memory_on_closing:=false',
+            'pos_tracking.publish_map_tf:=true',  # map フレームを TF に追加
         ]
     # slam_mode == 'off': area_memory stays false (yaml default)
 
