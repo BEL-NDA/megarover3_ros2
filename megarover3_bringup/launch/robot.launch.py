@@ -111,6 +111,11 @@ def launch_setup(context, params, param_name_suffix=''):
             executable='zed_odom_filter.py',
             name='zed_odom_filter',
         ),
+        Node(
+            package='megarover3_bringup',
+            executable='estop_marker.py',
+            name='estop_marker',
+        ),
     ] if rover_type == 'mega_zed' else []) + ([
         Node(
             package='megarover3_bringup',
