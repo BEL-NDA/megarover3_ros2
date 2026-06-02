@@ -10,4 +10,7 @@
       publish_map_tf: false
       set_gravity_as_origin: false
       reset_odom_with_loop_closure: false
-      area_memory: false
+      area_memory: false          # overridden by zed.launch.py when slam_mode!=off
+      area_file_path: ''          # overridden by zed.launch.py area_file arg
+      enable_localization_only: false
+      save_area_memory_on_closing: false
