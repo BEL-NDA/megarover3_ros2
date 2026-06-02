@@ -3,13 +3,14 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry, Path
 from geometry_msgs.msg import PoseStamped
+from std_srvs.srv import Empty
 
 
 class OdomToPath(Node):
     def __init__(self):
         super().__init__('odom_to_path')
         self.declare_parameter('max_poses', 10000)
-        self.declare_parameter('start_delay', 5.0)  # wait for EKF convergence
+        self.declare_parameter('start_delay', 5.0)
 
         self.max_poses = self.get_parameter('max_poses').get_parameter_value().integer_value
         start_delay = self.get_parameter('start_delay').get_parameter_value().double_value
@@ -18,6 +19,7 @@ class OdomToPath(Node):
         self.ready = False
         self.pub = self.create_publisher(Path, '/path', 10)
         self.create_subscription(Odometry, '/odometry/filtered', self.callback, 10)
+        self.create_service(Empty, '~/reset', self._reset)
 
         if start_delay > 0.0:
             self.create_timer(start_delay, self._on_ready)
@@ -27,6 +29,12 @@ class OdomToPath(Node):
     def _on_ready(self):
         self.ready = True
         self.get_logger().info('EKF convergence delay done — path recording started.')
+
+    def _reset(self, _req, res):
+        self.path.poses.clear()
+        self.pub.publish(self.path)
+        self.get_logger().info('Path reset.')
+        return res
 
     def callback(self, msg: Odometry):
         if not self.ready:
