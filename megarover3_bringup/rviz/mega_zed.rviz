@@ -247,17 +247,17 @@ Visualization Manager:
         Value: /zed/zed_node/rgb/image_rect_color
       Value: false
       Visibility:
-        Camera: true
+        Camera: false
         EStop: false
-        Grid: true
+        Grid: false
         ObjectDetection: true
-        Path: true
+        Path: false
         Pose: false
-        RobotModel: true
-        TF: true
-        Value: true
-        ZED PointCloud: true
-        ZED RGB: true
+        RobotModel: false
+        TF: false
+        Value: false
+        ZED PointCloud: false
+        ZED RGB: false
       Zoom Factor: 1
     - Alpha: 1
       Axes Length: 1
@@ -293,17 +293,17 @@ Visualization Manager:
         Value: /zed/zed_node/rgb/color/rect/image
       Value: true
       Visibility:
-        Camera: true
+        Camera: false
         EStop: false
-        Grid: true
+        Grid: false
         ObjectDetection: true
-        Path: true
+        Path: false
         Pose: false
-        RobotModel: true
-        TF: true
-        Value: true
-        ZED PointCloud: true
-        ZED RGB: true
+        RobotModel: false
+        TF: false
+        Value: false
+        ZED PointCloud: false
+        ZED RGB: false
       Zoom Factor: 1
   Enabled: true
   Global Options:
