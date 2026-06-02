@@ -77,6 +77,7 @@ install(
     scripts/obj_det_markers.py
     scripts/zed_odom_filter.py
     scripts/estop_marker.py
+    scripts/map_tf_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -27,6 +27,11 @@ def launch_setup(context, *args, **kwargs):
         ]
         if area_file:
             overrides.append(f'pos_tracking.area_file_path:={area_file}')
+        nodes.append(Node(
+            package='megarover3_bringup',
+            executable='map_tf_publisher.py',
+            name='map_tf_publisher',
+        ))
     elif slam_mode == 'localization':
         if not area_file:
             raise RuntimeError("slam_mode:=localization requires area_file to be set")
@@ -36,6 +41,11 @@ def launch_setup(context, *args, **kwargs):
             'pos_tracking.enable_localization_only:=true',
             'pos_tracking.save_area_memory_on_closing:=false',
         ]
+        nodes.append(Node(
+            package='megarover3_bringup',
+            executable='map_tf_publisher.py',
+            name='map_tf_publisher',
+        ))
     # slam_mode == 'off': area_memory stays false (yaml default)
 
     zed_launch = IncludeLaunchDescription(
