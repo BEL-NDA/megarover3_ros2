@@ -15,6 +15,7 @@ def launch_setup(context, *args, **kwargs):
     od = LaunchConfiguration('od').perform(context)
 
     overrides = [f'depth.depth_mode:={depth_mode}']
+    extra_nodes = []
 
     if od == 'true':
         overrides.append('object_detection.od_enabled:=true')
@@ -27,7 +28,7 @@ def launch_setup(context, *args, **kwargs):
         ]
         if area_file:
             overrides.append(f'pos_tracking.area_file_path:={area_file}')
-        nodes.append(Node(
+        extra_nodes.append(Node(
             package='megarover3_bringup',
             executable='map_tf_publisher.py',
             name='map_tf_publisher',
@@ -41,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
             'pos_tracking.enable_localization_only:=true',
             'pos_tracking.save_area_memory_on_closing:=false',
         ]
-        nodes.append(Node(
+        extra_nodes.append(Node(
             package='megarover3_bringup',
             executable='map_tf_publisher.py',
             name='map_tf_publisher',
@@ -69,7 +70,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    return [zed_launch]
+    return [zed_launch] + extra_nodes
 
 
 def generate_launch_description():
