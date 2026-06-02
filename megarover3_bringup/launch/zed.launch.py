@@ -75,8 +75,15 @@ def launch_setup(context, *args, **kwargs):
             }],
         ))
 
-    # localization モード: 保存済み PCD を配信
+    # localization モード: 保存済み PCD を配信 + map フレームを定義
     elif slam_mode == 'localization':
+        # map フレームが TF に存在しないと RViz で選べないため static transform を追加
+        nodes.append(Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='map_to_odom_static',
+            arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        ))
         pcd_path = area_file.replace('.area', '.pcd')
         if os.path.exists(pcd_path):
             nodes.append(Node(
