@@ -10,6 +10,8 @@
       publish_map_tf: false
       set_gravity_as_origin: false
       reset_odom_with_loop_closure: false
+      publish_3d_landmarks: true  # publish SLAM landmarks as PointCloud2 on pose/landmarks
+      publish_lm_skip_frame: 5
       area_memory: false          # overridden by zed.launch.py when slam_mode!=off
       area_file_path: ''          # overridden by zed.launch.py area_file arg
       enable_localization_only: false
