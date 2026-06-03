@@ -108,6 +108,9 @@ def launch_setup(context, params, param_name_suffix=''):
             package='megarover3_bringup',
             executable='odom_to_path.py',
             name='odom_to_path',
+            remappings=[
+                ('/odometry/filtered', '/odom'),
+            ],
         ),
     ] if rover_type == 'mega_zed' else [])
 
