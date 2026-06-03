@@ -197,6 +197,17 @@ ZED付き構成では、pub_odom は /wheel/odom をpublishし、robot_localizat
    ros2 launch megarover3_bringup robot.launch.py rover:=mega_zed
    ```
 
+#### ZED付き構成の実機確認
+`rover:=mega_zed` では、車輪由来の `/wheel/odom` と ZED visual odom の `/zed/zed_node/odom` を `robot_localization` で統合します。
+移動距離は車輪odometryを主に使い、ZED odomはyaw補正を主目的に使います。
+
+2026-06-03の実機確認では、低速の短い左右旋回、短い前進、後退、約0.8mの低速直進、少し長めの左右旋回で `/wheel/odom`、`/zed/zed_node/odom`、`/odom` が大きく破綻しないことを確認しました。
+約0.8mの低速直進では `/wheel/odom` が約0.810m、ZED odomが約0.804m、EKF後の `/odom` が約0.810mでした。
+
+ロボットを手で持ち上げて移動した場合は、車輪odometryが実際の移動量を積算できず、ZED odomとの整合が崩れます。
+その状態でEKFを継続しないでください。
+持ち上げ移動や衝突後に姿勢を手で直した場合は、`robot.launch.py rover:=mega_zed` と ZED wrapper を再起動し、現在位置を新しい初期状態として取り直してください。
+
 ### 台車ロボットをROS 2経由で遠隔操作
 #### キーボードで操作
 キーボードを使用してロボットを操作するためのノードを起動。
