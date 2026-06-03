@@ -182,6 +182,21 @@ Visualization Manager:
         zed_obj_det_labels: true
       Queue Size: 100
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /perception/people/markers
+      Name: Person Tracks
+      Namespaces:
+        person_track_label: true
+        person_track_position: true
+        person_track_velocity: true
+      Queue Size: 100
+      Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: EStop
@@ -211,6 +226,7 @@ Visualization Manager:
         EStop: false
         Grid: true
         Path: true
+        Person Tracks: true
         RobotModel: false
         TF: true
         Value: true

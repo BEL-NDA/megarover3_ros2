@@ -13,6 +13,7 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>megarover_perception_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>zed_msgs</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
