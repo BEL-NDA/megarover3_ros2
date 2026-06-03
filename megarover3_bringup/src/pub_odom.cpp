@@ -7,6 +7,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <string>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -27,16 +28,24 @@ public:
   : Node("odometry_publisher")
   {
     this->declare_parameter("publish_tf", true);
+    this->declare_parameter("input_topic", "rover_odo");
+    this->declare_parameter("odom_topic", "odom");
+    this->declare_parameter("odom_frame_id", "odom");
+    this->declare_parameter("base_frame_id", "base_footprint");
     publish_tf_ = this->get_parameter("publish_tf").as_bool();
+    input_topic_ = this->get_parameter("input_topic").as_string();
+    odom_topic_ = this->get_parameter("odom_topic").as_string();
+    odom_frame_id_ = this->get_parameter("odom_frame_id").as_string();
+    base_frame_id_ = this->get_parameter("base_frame_id").as_string();
 
-    publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", rclcpp::QoS(1));
+    publisher_ = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, rclcpp::QoS(1));
 
     // publish odometry data and tf transform every 10ms (=100hz)
     timer_ = this->create_wall_timer(
       10ms, std::bind(&PubOdomNode::timer_callback, this));
 
     subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
-      "rover_odo", rclcpp::SensorDataQoS(), std::bind(&PubOdomNode::rover_odom_callback, this, _1));
+      input_topic_, rclcpp::SensorDataQoS(), std::bind(&PubOdomNode::rover_odom_callback, this, _1));
 
     // Initialize the transform broadcaster
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -53,7 +62,7 @@ private:
 
     //next, we'll publish the odometry message over ROS
     msg.header.stamp = current_time;
-    msg.header.frame_id = "odom";
+    msg.header.frame_id = odom_frame_id_;
 
     //set the position
     msg.pose.pose.position.x = x; 
@@ -62,7 +71,7 @@ private:
     msg.pose.pose.orientation = odom_quat;
 
     //set the velocity
-    msg.child_frame_id = "base_footprint";
+    msg.child_frame_id = base_frame_id_;
     msg.twist.twist.linear.x = vx;
     msg.twist.twist.angular.z = vth;
     msg.twist.covariance[0]  = 0.01;   // vx
@@ -93,8 +102,8 @@ private:
     // Read message content and assign it to
     // corresponding tf variables
     t.header.stamp = current_time;
-    t.header.frame_id = "odom";
-    t.child_frame_id = "base_footprint";
+    t.header.frame_id = odom_frame_id_;
+    t.child_frame_id = base_frame_id_;
 
     t.transform.translation.x = x;
     t.transform.translation.y = y;
@@ -110,6 +119,10 @@ private:
   }
 
   bool publish_tf_;
+  std::string input_topic_;
+  std::string odom_topic_;
+  std::string odom_frame_id_;
+  std::string base_frame_id_;
   double vx =  0.0;
   double vth = 0.0;
   double odom_kvx = 1.0;

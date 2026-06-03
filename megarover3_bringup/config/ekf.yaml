@@ -9,8 +9,9 @@ ekf_filter_node:
     base_link_frame: base_footprint
     world_frame: odom
 
-    # 車輪エンコーダ: vx と vyaw を使用
-    odom0: /odom
+    # 車輪エンコーダ由来のraw odom: vx と vyaw を使用
+    # /odom はこのEKFの出力だけにするため、pub_odom は /wheel/odom に出します。
+    odom0: /wheel/odom
     odom0_config: [false, false, false,
                    false, false, false,
                    true,  false, false,
@@ -20,7 +21,7 @@ ekf_filter_node:
     odom0_relative: false
     odom0_queue_size: 10
 
-    # ZED 視覚 odom: x, y, yaw を使用
+    # ZED 視覚 odom: 実機では x, y, yaw を使用
     odom1: /zed/zed_node/odom
     odom1_config: [true,  true,  false,
                    false, false, true,

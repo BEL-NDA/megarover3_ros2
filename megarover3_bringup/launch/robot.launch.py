@@ -36,6 +36,8 @@ def set_configurable_parameters(parameters):
 
 def launch_setup(context, params, param_name_suffix=''):
     rover_type = LaunchConfiguration('rover').perform(context)
+    uses_ekf = rover_type == 'mega_zed'
+    wheel_odom_topic = 'wheel/odom' if uses_ekf else 'odom'
 
     robot_description_path = os.path.join(
         get_package_share_directory('megarover_description'),
@@ -78,7 +80,12 @@ def launch_setup(context, params, param_name_suffix=''):
             package='megarover3_bringup',
             executable='pub_odom',
             name='pub_odom',
-            parameters=[{'publish_tf': rover_type != 'mega_zed'}],
+            parameters=[
+                {
+                    'publish_tf': not uses_ekf,
+                    'odom_topic': wheel_odom_topic,
+                }
+            ],
         ),
     ] + ([
         Node(
@@ -86,6 +93,9 @@ def launch_setup(context, params, param_name_suffix=''):
             executable='ekf_node',
             name='ekf_filter_node',
             output='screen',
+            remappings=[
+                ('/odometry/filtered', '/odom'),
+            ],
             parameters=[
                 os.path.join(
                     get_package_share_directory('megarover3_bringup'),
