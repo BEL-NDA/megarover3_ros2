@@ -226,7 +226,7 @@ Visualization Manager:
         EStop: false
         Grid: true
         Path: true
-        RobotModel: true
+        RobotModel: false
         TF: true
         Value: true
         ZED Object Detection: true
