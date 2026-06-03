@@ -75,6 +75,7 @@ private:
     msg.twist.twist.linear.x = vx;
     msg.twist.twist.angular.z = vth;
     msg.twist.covariance[0]  = 0.01;   // vx
+    msg.twist.covariance[7]  = 0.01;   // vy (nonholonomic constraint)
     msg.twist.covariance[35] = 0.03;   // vyaw
 
     publisher_->publish(msg);

@@ -9,12 +9,13 @@ ekf_filter_node:
     base_link_frame: base_footprint
     world_frame: odom
 
-    # 車輪エンコーダ由来のraw odom: vx と vyaw を使用
+    # 車輪エンコーダ由来のraw odom: vx、vy=0、vyaw を使用
+    # vy=0 は非ホロノミック制約として使い、横方向covarianceの発散を抑えます。
     # /odom はこのEKFの出力だけにするため、pub_odom は /wheel/odom に出します。
     odom0: /wheel/odom
     odom0_config: [false, false, false,
                    false, false, false,
-                   true,  false, false,
+                   true,  true,  false,
                    false, false, true,
                    false, false, false]
     odom0_differential: false
