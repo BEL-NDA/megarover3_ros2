@@ -1,0 +1,11 @@
+std_msgs/Header header
+int32 track_id
+string class_name
+float32 confidence
+megarover_perception_msgs/BoundingBox2D bbox_2d
+geometry_msgs/Point position_3d
+bool has_velocity_3d
+geometry_msgs/Vector3 velocity_3d
+bool has_bbox_3d
+megarover_perception_msgs/BoundingBox3D bbox_3d
+int8 tracking_state

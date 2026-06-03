@@ -119,6 +119,12 @@ def launch_setup(context, params, param_name_suffix=''):
             output='screen',
         ),
         Node(
+            package='megarover_perception',
+            executable='zed_person_tracks',
+            name='zed_person_tracks',
+            output='screen',
+        ),
+        Node(
             package='megarover3_bringup',
             executable='estop_marker.py',
             name='estop_marker',

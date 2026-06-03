@@ -13,6 +13,7 @@
       area_memory: false
     object_detection:
       detection_model: 'MULTI_CLASS_BOX_MEDIUM'
+      enable_tracking: true
       filtering_mode: 'NMS3D_PER_CLASS'
       class:
         people:
