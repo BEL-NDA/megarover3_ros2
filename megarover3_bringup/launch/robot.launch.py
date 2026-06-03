@@ -112,6 +112,12 @@ def launch_setup(context, params, param_name_suffix=''):
                 ('/odometry/filtered', '/odom'),
             ],
         ),
+        Node(
+            package='megarover3_bringup',
+            executable='zed_objects_to_markers.py',
+            name='zed_objects_to_markers',
+            output='screen',
+        ),
     ] if rover_type == 'mega_zed' else [])
 
 

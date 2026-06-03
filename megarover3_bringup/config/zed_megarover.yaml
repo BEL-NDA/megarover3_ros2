@@ -11,3 +11,10 @@
       set_gravity_as_origin: false
       reset_odom_with_loop_closure: false
       area_memory: false
+    object_detection:
+      detection_model: 'MULTI_CLASS_BOX_MEDIUM'
+      filtering_mode: 'NMS3D_PER_CLASS'
+      class:
+        people:
+          enabled: true
+          confidence_threshold: 40.0

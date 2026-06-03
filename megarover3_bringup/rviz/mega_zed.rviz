@@ -183,6 +183,20 @@ Visualization Manager:
         Reliability Policy: Best Effort
         Value: /zed/zed_node/rgb/image_rect_color
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /zed/obj_det/markers
+      Name: ZED Object Detection
+      Namespaces:
+        zed_obj_det_boxes: true
+        zed_obj_det_labels: true
+      Queue Size: 100
+      Value: true
     - Class: rviz_default_plugins/Path
       Color: 0; 255; 0
       Enabled: true

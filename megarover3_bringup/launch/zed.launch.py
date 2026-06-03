@@ -13,6 +13,12 @@ def generate_launch_description():
         description='ZED depth mode: NEURAL_LIGHT, NEURAL, NEURAL_PLUS',
         choices=['NEURAL_LIGHT', 'NEURAL', 'NEURAL_PLUS'],
     )
+    od_arg = DeclareLaunchArgument(
+        'od',
+        default_value='false',
+        description='Enable ZED SDK Object Detection',
+        choices=['true', 'false'],
+    )
 
     zed_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -32,9 +38,10 @@ def generate_launch_description():
                 'zed_megarover.yaml',
             ),
             'param_overrides': PythonExpression([
-                '"depth.depth_mode=', LaunchConfiguration('depth_mode'), '"'
+                '"depth.depth_mode:=', LaunchConfiguration('depth_mode'),
+                ';object_detection.od_enabled:=', LaunchConfiguration('od'), '"'
             ]),
         }.items(),
     )
 
-    return LaunchDescription([depth_mode_arg, zed_launch])
+    return LaunchDescription([depth_mode_arg, od_arg, zed_launch])

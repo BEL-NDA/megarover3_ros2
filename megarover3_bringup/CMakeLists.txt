@@ -14,6 +14,8 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(zed_msgs REQUIRED)
 
 # pub_odom
 add_executable(pub_odom src/pub_odom.cpp)
@@ -72,7 +74,9 @@ install(
 )
 
 install(
-  PROGRAMS scripts/odom_to_path.py
+  PROGRAMS
+    scripts/odom_to_path.py
+    scripts/zed_objects_to_markers.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
