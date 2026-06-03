@@ -76,6 +76,7 @@ install(
 install(
   PROGRAMS
     scripts/odom_to_path.py
+    scripts/estop_marker.py
     scripts/zed_objects_to_markers.py
   DESTINATION lib/${PROJECT_NAME}
 )

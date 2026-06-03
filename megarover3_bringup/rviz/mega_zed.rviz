@@ -197,6 +197,18 @@ Visualization Manager:
         zed_obj_det_labels: true
       Queue Size: 100
       Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: EStop
+      Namespaces:
+        estop: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /estop_marker
+      Value: true
     - Class: rviz_default_plugins/Path
       Color: 0; 255; 0
       Enabled: true

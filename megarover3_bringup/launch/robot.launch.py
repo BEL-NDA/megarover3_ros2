@@ -118,6 +118,12 @@ def launch_setup(context, params, param_name_suffix=''):
             name='zed_objects_to_markers',
             output='screen',
         ),
+        Node(
+            package='megarover3_bringup',
+            executable='estop_marker.py',
+            name='estop_marker',
+            output='screen',
+        ),
     ] if rover_type == 'mega_zed' else [])
 
 
