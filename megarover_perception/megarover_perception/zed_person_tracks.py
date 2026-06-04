@@ -37,6 +37,15 @@ def _vector_from_xyz(values):
     return vector
 
 
+def _xyz_tuple(values):
+    if len(values) != 3:
+        return None
+    xyz = tuple(float(value) for value in values)
+    if not _finite_values(xyz):
+        return None
+    return xyz
+
+
 class ZedPersonTracks(Node):
     def __init__(self):
         super().__init__('zed_person_tracks')
@@ -76,7 +85,7 @@ class ZedPersonTracks(Node):
         if stamp_seconds <= 0.0:
             stamp_seconds = self.get_clock().now().nanoseconds * 1e-9
 
-        detections = [obj for obj in msg.objects if self._is_person(obj)]
+        detections = [obj for obj in msg.objects if self._is_publishable_person(obj)]
         self._expire_tracks(stamp_seconds)
 
         assignments = self._assign_tracks(detections, stamp_seconds)
@@ -108,13 +117,20 @@ class ZedPersonTracks(Node):
 
         self._pub.publish(output)
 
-    def _is_person(self, obj):
+    def _is_publishable_person(self, obj):
         if float(obj.confidence) < self._min_confidence:
             return False
 
         label = str(obj.label).lower()
         sublabel = str(obj.sublabel).lower()
-        return 'person' in label or 'person' in sublabel
+        if 'person' not in label and 'person' not in sublabel:
+            return False
+
+        return (
+            _xyz_tuple(obj.position) is not None
+            and self._to_bbox_2d(obj.bounding_box_2d) is not None
+            and self._to_bbox_3d(obj.bounding_box_3d) is not None
+        )
 
     def _expire_tracks(self, stamp_seconds):
         expired_ids = [
@@ -129,7 +145,9 @@ class ZedPersonTracks(Node):
         assignments = []
 
         for obj in detections:
-            position = tuple(float(value) for value in obj.position)
+            position = _xyz_tuple(obj.position)
+            if position is None:
+                continue
             track_id = self._find_nearest_track(position, unmatched_track_ids)
             if track_id is None:
                 track_id = self._next_track_id
@@ -167,6 +185,7 @@ class ZedPersonTracks(Node):
         track.header = header
         track.track_id = int(track_id)
         track.class_name = 'person'
+        # ZED publishes object confidence on a 0-100 percent scale.
         track.confidence = float(obj.confidence)
         track.bbox_2d = self._to_bbox_2d(obj.bounding_box_2d)
         track.position_3d = _point_from_xyz(obj.position)
@@ -176,31 +195,43 @@ class ZedPersonTracks(Node):
         if track.has_velocity_3d:
             track.velocity_3d = _vector_from_xyz(velocity)
 
-        bbox_3d = self._to_bbox_3d(obj.bounding_box_3d)
-        track.has_bbox_3d = bbox_3d is not None
-        if track.has_bbox_3d:
-            track.bbox_3d = bbox_3d
+        track.has_bbox_3d = True
+        track.bbox_3d = self._to_bbox_3d(obj.bounding_box_3d)
 
         track.tracking_state = int(obj.tracking_state)
         return track
 
     def _to_bbox_2d(self, bbox):
+        if len(bbox.corners) != 4:
+            return None
+
         xs = [float(corner.kp[0]) for corner in bbox.corners]
         ys = [float(corner.kp[1]) for corner in bbox.corners]
+        if not _finite_values(xs + ys):
+            return None
+
+        x_min = min(xs)
+        y_min = min(ys)
+        x_max = max(xs)
+        y_max = max(ys)
+        if x_min >= x_max or y_min >= y_max:
+            return None
 
         converted = BoundingBox2D()
-        if xs and ys and _finite_values(xs + ys):
-            converted.x_min = min(xs)
-            converted.y_min = min(ys)
-            converted.x_max = max(xs)
-            converted.y_max = max(ys)
+        converted.x_min = x_min
+        converted.y_min = y_min
+        converted.x_max = x_max
+        converted.y_max = y_max
         return converted
 
     def _to_bbox_3d(self, bbox):
+        if len(bbox.corners) != 8:
+            return None
+
         corners = []
         for corner in bbox.corners:
-            xyz = [float(value) for value in corner.kp]
-            if not _finite_values(xyz):
+            xyz = _xyz_tuple(corner.kp)
+            if xyz is None:
                 return None
             corners.append(_point_from_xyz(xyz))
 

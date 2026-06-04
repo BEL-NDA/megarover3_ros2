@@ -198,6 +198,11 @@ ZED付き構成では、pub_odom は /wheel/odom をpublishし、robot_localizat
    ```
 
 `rover:=mega_zed` では、ZEDの `/zed/zed_node/obj_det/objects` からpersonだけを抽出し、制御用の共通topic `/perception/people/tracks` をpublishします。型は `megarover_perception_msgs/PersonTrackArray` です。各trackには `track_id`、`class_name`、`confidence`、`bbox_2d`、`position_3d`、必要に応じて `velocity_3d` と `bbox_3d` が入ります。
+`header` はZED object detectionの `header` をそのまま使うため、`stamp` は画像/点群/ZED object detectionと同じ時刻、`frame_id` は `position_3d` と `bbox_3d` の座標系です。
+`confidence` はZED SDK由来の 0-100 [%] で統一します。
+`bbox_2d` は `/zed/zed_node/rgb/color/rect/image` と同じ左上原点のpixel座標で、`x_min < x_max`、`y_min < y_max` のtrackだけをpublishします。
+`bbox_3d` はZEDの3D bbox 8頂点がすべて有限値の場合だけpublishし、publish済みtrackでは `has_bbox_3d=true` です。
+`velocity_3d` はZEDが有限値を出した場合だけ `has_velocity_3d=true` として入ります。
 短時間だけZED検出が落ちた場合でも、`zed_person_tracks` は最後に見えていたtrackを `tracking_state=0` として保持します。
 RViz用の `person_tracks_to_markers` は `/perception/people/tracks` をそのまま表示し、tracker側で消えたtrackだけを削除します。
 このperson track経路は実機とIsaac Simで共有する制御用経路です。
