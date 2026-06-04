@@ -198,6 +198,10 @@ ZED付き構成では、pub_odom は /wheel/odom をpublishし、robot_localizat
    ```
 
 `rover:=mega_zed` では、ZEDの `/zed/zed_node/obj_det/objects` からpersonだけを抽出し、制御用の共通topic `/perception/people/tracks` をpublishします。型は `megarover_perception_msgs/PersonTrackArray` です。各trackには `track_id`、`class_name`、`confidence`、`bbox_2d`、`position_3d`、必要に応じて `velocity_3d` と `bbox_3d` が入ります。
+短時間だけZED検出が落ちた場合でも、`zed_person_tracks` は最後に見えていたtrackを `tracking_state=0` として保持します。
+RViz用の `person_tracks_to_markers` は `/perception/people/tracks` をそのまま表示し、tracker側で消えたtrackだけを削除します。
+このperson track経路は実機とIsaac Simで共有する制御用経路です。
+従来の `/zed/obj_det/markers` はZED objectsを直接表示する補助表示で、制御コードからは `/perception/people/tracks` を使います。
 
 #### ZED付き構成の実機確認
 `rover:=mega_zed` では、車輪由来の `/wheel/odom` と ZED visual odom の `/zed/zed_node/odom` を `robot_localization` で統合します。

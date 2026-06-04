@@ -1,4 +1,5 @@
 import math
+import copy
 
 import rclpy
 from geometry_msgs.msg import Point, Vector3
@@ -43,9 +44,9 @@ class ZedPersonTracks(Node):
         self.declare_parameter('input_topic', '/zed/zed_node/obj_det/objects')
         self.declare_parameter('output_topic', '/perception/people/tracks')
         self.declare_parameter('min_confidence', 40.0)
-        self.declare_parameter('max_match_distance', 0.8)
-        self.declare_parameter('max_track_age_seconds', 1.0)
-        self.declare_parameter('publish_searching', True)
+        self.declare_parameter('max_match_distance', 2.0)
+        self.declare_parameter('max_track_age_seconds', 3.0)
+        self.declare_parameter('publish_searching', False)
 
         self._min_confidence = float(self.get_parameter('min_confidence').value)
         self._max_match_distance = float(self.get_parameter('max_match_distance').value)
@@ -83,10 +84,27 @@ class ZedPersonTracks(Node):
         output = PersonTrackArray()
         output.header = msg.header
 
+        assigned_track_ids = set()
         for obj, track_id in assignments:
-            if not self._publish_searching and int(obj.tracking_state) == 2:
+            person_track = self._to_person_track(msg.header, obj, track_id)
+            self._tracks[track_id]['last_track'] = copy.deepcopy(person_track)
+            assigned_track_ids.add(track_id)
+
+            if not self._publish_searching and person_track.tracking_state != 1:
                 continue
-            output.tracks.append(self._to_person_track(msg.header, obj, track_id))
+            output.tracks.append(person_track)
+
+        if self._publish_searching:
+            for track_id, track in self._tracks.items():
+                if track_id in assigned_track_ids:
+                    continue
+                last_track = track.get('last_track')
+                if last_track is None:
+                    continue
+                searching_track = copy.deepcopy(last_track)
+                searching_track.header = msg.header
+                searching_track.tracking_state = 0
+                output.tracks.append(searching_track)
 
         self._pub.publish(output)
 

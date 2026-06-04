@@ -1,8 +1,8 @@
 import math
-
 import rclpy
 from megarover_perception_msgs.msg import PersonTrackArray
 from rclpy.node import Node
+from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker, MarkerArray
 
 
@@ -12,13 +12,12 @@ class PersonTracksToMarkers(Node):
 
         self.declare_parameter('tracks_topic', '/perception/people/tracks')
         self.declare_parameter('markers_topic', '/perception/people/markers')
-        self.declare_parameter('marker_lifetime_sec', 0.5)
-        self.declare_parameter('max_stale_track_id', 80)
+        self.declare_parameter('marker_lifetime_sec', 0.0)
 
         tracks_topic = self.get_parameter('tracks_topic').value
         markers_topic = self.get_parameter('markers_topic').value
         self._marker_lifetime_sec = float(self.get_parameter('marker_lifetime_sec').value)
-        self._max_stale_track_id = int(self.get_parameter('max_stale_track_id').value)
+        self._active_marker_keys = set()
 
         self._pub = self.create_publisher(MarkerArray, markers_topic, 10)
         self._sub = self.create_subscription(
@@ -34,30 +33,35 @@ class PersonTracksToMarkers(Node):
 
     def _on_tracks(self, msg):
         markers = MarkerArray()
-        active_ids = set()
+        active_marker_keys = set()
 
         for track in msg.tracks:
-            marker_id = int(track.track_id) * 3
-            active_ids.update((marker_id, marker_id + 1, marker_id + 2))
+            marker_id = int(track.track_id) * 4
+            position_key = ('person_track_position', marker_id)
+            label_key = ('person_track_label', marker_id + 1)
 
+            active_marker_keys.add(position_key)
+            active_marker_keys.add(label_key)
             markers.markers.append(self._sphere_marker(msg, track, marker_id))
             markers.markers.append(self._text_marker(msg, track, marker_id + 1))
+
             if track.has_velocity_3d and self._has_nonzero_velocity(track):
+                active_marker_keys.add(('person_track_velocity', marker_id + 2))
                 markers.markers.append(self._velocity_marker(msg, track, marker_id + 2))
-            else:
-                markers.markers.append(self._delete_marker(msg, 'person_track_velocity', marker_id + 2))
 
-        max_marker_id = max(self._max_stale_track_id * 3, max(active_ids, default=0) + 3)
-        for stale_id in range(0, max_marker_id + 1):
-            if stale_id not in active_ids:
-                namespace = self._namespace_for_marker_id(stale_id)
-                markers.markers.append(self._delete_marker(msg, namespace, stale_id))
+            if track.has_bbox_3d:
+                active_marker_keys.add(('person_track_bbox_3d', marker_id + 3))
+                markers.markers.append(self._bbox_marker(msg, track, marker_id + 3))
 
+        for namespace, marker_id in self._active_marker_keys - active_marker_keys:
+            markers.markers.append(self._delete_marker(msg, namespace, marker_id))
+
+        self._active_marker_keys = active_marker_keys
         self._pub.publish(markers)
 
     def _sphere_marker(self, msg, track, marker_id):
         marker = Marker()
-        marker.header = msg.header
+        self._set_marker_header(marker, msg)
         marker.ns = 'person_track_position'
         marker.id = marker_id
         marker.type = Marker.SPHERE
@@ -76,7 +80,7 @@ class PersonTracksToMarkers(Node):
 
     def _text_marker(self, msg, track, marker_id):
         marker = Marker()
-        marker.header = msg.header
+        self._set_marker_header(marker, msg)
         marker.ns = 'person_track_label'
         marker.id = marker_id
         marker.type = Marker.TEXT_VIEW_FACING
@@ -99,7 +103,7 @@ class PersonTracksToMarkers(Node):
 
     def _velocity_marker(self, msg, track, marker_id):
         marker = Marker()
-        marker.header = msg.header
+        self._set_marker_header(marker, msg)
         marker.ns = 'person_track_velocity'
         marker.id = marker_id
         marker.type = Marker.ARROW
@@ -123,13 +127,36 @@ class PersonTracksToMarkers(Node):
         marker.lifetime = self._lifetime()
         return marker
 
+    def _bbox_marker(self, msg, track, marker_id):
+        marker = Marker()
+        self._set_marker_header(marker, msg)
+        marker.ns = 'person_track_bbox_3d'
+        marker.id = marker_id
+        marker.type = Marker.LINE_LIST
+        marker.action = Marker.ADD
+        marker.pose.orientation.w = 1.0
+        marker.points = self._bbox_edges(track.bbox_3d.corners)
+        marker.scale.x = 0.035
+        marker.color.r = 0.0
+        marker.color.g = 0.85
+        marker.color.b = 1.0
+        marker.color.a = 0.95
+        marker.lifetime = self._lifetime()
+        return marker
+
     def _delete_marker(self, msg, namespace, marker_id):
         marker = Marker()
-        marker.header = msg.header
+        self._set_marker_header(marker, msg)
         marker.ns = namespace
         marker.id = marker_id
         marker.action = Marker.DELETE
         return marker
+
+    @staticmethod
+    def _set_marker_header(marker, msg):
+        marker.header.frame_id = msg.header.frame_id
+        marker.header.stamp.sec = 0
+        marker.header.stamp.nanosec = 0
 
     def _lifetime(self):
         lifetime = Marker().lifetime
@@ -147,13 +174,32 @@ class PersonTracksToMarkers(Node):
         return math.isfinite(speed) and speed > 1e-3
 
     @staticmethod
+    def _bbox_edges(corners):
+        if len(corners) != 8:
+            return []
+
+        edges = (
+            (0, 1), (1, 2), (2, 3), (3, 0),
+            (4, 5), (5, 6), (6, 7), (7, 4),
+            (0, 4), (1, 5), (2, 6), (3, 7),
+        )
+
+        points = []
+        for start, end in edges:
+            points.append(Point(x=corners[start].x, y=corners[start].y, z=corners[start].z))
+            points.append(Point(x=corners[end].x, y=corners[end].y, z=corners[end].z))
+        return points
+
+    @staticmethod
     def _namespace_for_marker_id(marker_id):
-        remainder = marker_id % 3
+        remainder = marker_id % 4
         if remainder == 0:
             return 'person_track_position'
         if remainder == 1:
             return 'person_track_label'
-        return 'person_track_velocity'
+        if remainder == 2:
+            return 'person_track_velocity'
+        return 'person_track_bbox_3d'
 
 
 def main(args=None):

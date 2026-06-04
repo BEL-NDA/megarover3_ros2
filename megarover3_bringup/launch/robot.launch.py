@@ -123,6 +123,10 @@ def launch_setup(context, params, param_name_suffix=''):
             executable='zed_person_tracks',
             name='zed_person_tracks',
             output='screen',
+            parameters=[{
+                'max_track_age_seconds': 8.0,
+                'publish_searching': True,
+            }],
         ),
         Node(
             package='megarover_perception',
