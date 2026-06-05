@@ -18,6 +18,7 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
+            'nav2_obstacle_cloud_filter = megarover_perception.nav2_obstacle_cloud_filter:main',
             'person_tracks_to_markers = megarover_perception.person_tracks_to_markers:main',
             'zed_person_tracks = megarover_perception.zed_person_tracks:main',
         ],
